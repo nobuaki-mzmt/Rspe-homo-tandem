@@ -20,6 +20,7 @@
   
   ## Packages
   {
+    library(ggplot2)
     library(data.table)
     library(stringr)
     require(grid)
@@ -112,10 +113,10 @@
     
     x <- df.temp$x
     y <- df.temp$y
-    xL <- max(x) - min(x)
-    yL <- max(y) - min(y)
-    df.temp$x <- (x-min(x))/xL * arena.size
-    df.temp$y <- (y-min(y))/yL * arena.size
+    xL <- max(x, na.rm=T) - min(x, na.rm=T)
+    yL <- max(y, na.rm=T) - min(y, na.rm=T)
+    df.temp$x <- (x-min(x, na.rm=T))/xL * arena.size
+    df.temp$y <- (y-min(y, na.rm=T))/yL * arena.size
     
     # plot
     if(Plot){
@@ -132,8 +133,8 @@
         theme(legend.position = "none", aspect.ratio = 1)+ 
         coord_cartesian(xlim=c(0,300), ylim=c(0, 30)) +
         ggtitle(paste(v, ind.names[v]))
-      p3 <-grid.arrange(p1, p2, nrow = 1)
-      ggsave(file.path(PROJHOME, "plot/scale-trajectories/", paste0(df.temp$name[1], ".png")), p3, width = 6, height = 3)
+      ggsave(file.path(PROJHOME, "plot/scale-trajectories/", paste0(df.temp$name[1], ".png")), 
+             plot = grid.arrange(p1, p2, nrow = 1), width = 6, height = 3)
     }
   }  
   
