@@ -60,12 +60,41 @@
   }
   df.sec$scheme[df.sec$scheme != "sep"] <- "tan"
   
-  ggplot(df.sec, aes(x=time, y=speed, col=role)) +
-    #geom_path() +
-    stat_smooth() +
-    facet_grid(scheme~treat)
+  treat.names <- unique(df.sec$treat)
+  scheme.names <- unique(df.sec$scheme)
+  df.sec.sum <- data.frame()
+  for(i in 1:2){
+    for(j in 1:3){
+      df.sec.temp <- df.sec[df.sec$scheme ==scheme.names[i] &
+                              df.sec$treat == treat.names[j], ]
+      ymean <- tapply(df.sec.temp$speed, df.sec.temp[,c("time","role")], mean)
+      yse <- tapply(df.sec.temp$speed, df.sec.temp[,c("time","role")], se)
+      df.temp1 <- data.frame(treat=treat.names[j], scheme = scheme.names[i],
+                 role = "Follower", time = 1:300,
+                 speed.mean = ymean[,1], speed.se = yse[,1],
+                 speed.mean.m.se = ymean[,1] - yse[,1],
+                 speed.mean.p.se = ymean[,1] + yse[,1])
+      df.temp2 <- data.frame(treat=treat.names[j], scheme = scheme.names[i],
+                             role = "Leader", time = 1:300,
+                             speed.mean = ymean[,2], speed.se = yse[,2],
+                             speed.mean.m.se = ymean[,2] - yse[,2],
+                             speed.mean.p.se = ymean[,2] + yse[,2])
+      df.sec.sum <- rbind(df.sec.sum, df.temp1)
+      df.sec.sum <- rbind(df.sec.sum, df.temp2)
+    }
+  }
+  df.sec.sum$scheme <- factor(df.sec.sum$scheme, levels=c("tan", "sep"))
+  df.sec.sum$treat <- factor(df.sec.sum$treat, levels=c("FM", "FF", "MM"))
+  df.sec.sum[df.sec.sum$treat=="FM" & df.sec.sum$role == "Follower",]$role <- "M-Follower"
+  df.sec.sum[df.sec.sum$treat=="FM" & df.sec.sum$role == "Leader",]$role <- "F-Leader"
+  df.sec.sum[df.sec.sum$treat=="FF",]$role <- paste0("F-", df.sec.sum[df.sec.sum$treat=="FF",]$role)
+  df.sec.sum[df.sec.sum$treat=="MM",]$role <- paste0("M-", df.sec.sum[df.sec.sum$treat=="MM",]$role)
   
-  ind.names <- unique(df$name) 
-  df.temp <- df.sep[df.sep$name == ind.names[v],]
-  df.temp
+  ggplot(df.sec.sum, aes(x=time, y=speed.mean, color=role, fill=role)) +
+    geom_ribbon(aes(ymin=speed.mean.m.se, ymax=speed.mean.p.se),alpha=0.5) +
+    facet_grid(treat~scheme) +
+    scale_color_viridis(discrete = T, end=0.5) +
+    scale_fill_viridis(discrete = T, end=0.5) +
+    theme_bw() + theme(aspect.ratio = 0.75) +
+    scale_y_continuous(limits = c(0,30))
 }
