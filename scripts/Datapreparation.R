@@ -57,7 +57,7 @@
     
     # file info
     d <- data.frame(fread(rawdata[v], header=T))
-    d <- d[1:(5*60*30),]
+    d <- d[1:(5*60*30+1),]
     
     species = substr(dataname[v], 1, 2)
     treat = substr(dataname[v], 4, 5)
@@ -66,7 +66,7 @@
     id = substr(dataname[v], 9, 10)
     scheme = substr(dataname[v], 12, 14) 
     name <- paste(species, treat, id, role, sep="-")
-    print(paste(v, name))
+    print(paste(v, "/", length(rawdata), "->", name))
     
     # plot
     if(Plot){
@@ -80,7 +80,7 @@
     
     # datafrmae
     d[,1] <- d[,1]/30
-    d <- d[seq(1,9000,6),]
+    d <- d[seq(1,9001,6),]
     if(Dataframe){
       if(scheme == "tan"){
         dftemp1 <- data.frame(species, treat, role, id, scheme = paste0(scheme, "-L"), name, time = d[,1], x=d[,2], y=d[,3])
