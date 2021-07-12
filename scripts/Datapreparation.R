@@ -101,15 +101,19 @@
 # assuming that termites moved throughout the arena, scale the movement range as arena size
 # scaling is performed for each observed arena (pool tandem and separation for each individual)
 # also check speed time development to detect tracking error
+# save scaled data as .rda
 {
-  Plot <- T
+  Plot <- F
   dir.create(file.path(PROJHOME, "/plot/scale-trajectories"), showWarnings = FALSE)
+  
+  f.name <- paste0(rda.place, "/AllData.rda")
+  load(f.name)
   
   ind.names <- unique(df$name) 
   
   for(v in 1:length(ind.names)){
     df.temp <- df[df$name == ind.names[v],]
-    print(ind.names[v])
+    print(paste(v, "/", length(ind.names), "->", ind.names[v]))
     
     x <- df.temp$x
     y <- df.temp$y
@@ -136,6 +140,10 @@
       ggsave(file.path(PROJHOME, "plot/scale-trajectories/", paste0(df.temp$name[1], ".png")), 
              plot = grid.arrange(p1, p2, nrow = 1), width = 6, height = 3)
     }
+    
+    # data.frame
+    df[df$name == ind.names[v],] <- df.temp
   }  
-  
+  f.name <- paste0(rda.place, "/AllData-scaled.rda")
+  save(df, file = f.name)
 }
