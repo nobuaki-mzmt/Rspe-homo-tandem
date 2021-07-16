@@ -89,11 +89,13 @@
   tapply(df.param$mu, df.param[,c("treat", "role")], mean)
   tapply(df.param$rho, df.param[,c("treat", "role")], mean)
   
-  data.frame(
+  df.temp <- data.frame(
     treat = rep(c("FF", "FM", "MM"), 2),
     role = rep( c("Follower", "Leader"), each=3),
     speed = as.vector(tapply(df.param$speed, df.param[,c("treat", "role")], mean)) * 5,
     sinuosity =as.vector(tapply(df.param$rho, df.param[,c("treat", "role")], mean))
   )
+  
+  write.csv(df.temp, file= file.path(PROJHOME, "/data/", "Parameters.csv"), row.names = F)
   
 }
