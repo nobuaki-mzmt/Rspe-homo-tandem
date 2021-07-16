@@ -89,12 +89,14 @@
   df.sec.sum[df.sec.sum$treat=="FM" & df.sec.sum$role == "Leader",]$role <- "F-Leader"
   df.sec.sum[df.sec.sum$treat=="FF",]$role <- paste0("F-", df.sec.sum[df.sec.sum$treat=="FF",]$role)
   df.sec.sum[df.sec.sum$treat=="MM",]$role <- paste0("M-", df.sec.sum[df.sec.sum$treat=="MM",]$role)
-  
+  df.sec.sum$role <- factor(df.sec.sum$role, levels=c("F-Leader", "F-Follower",
+                                                       "M-Leader", "M-Follower"))
   ggplot(df.sec.sum, aes(x=time, y=speed.mean, color=role, fill=role)) +
     geom_ribbon(aes(ymin=speed.mean.m.se, ymax=speed.mean.p.se),alpha=0.5) +
     facet_grid(treat~scheme) +
     scale_color_viridis(discrete = T, end=0.5) +
     scale_fill_viridis(discrete = T, end=0.5) +
     theme_bw() + theme(aspect.ratio = 0.75) +
-    scale_y_continuous(limits = c(0,30))
+    scale_y_continuous(limits = c(0,30)) +
+    xlab("Time (sec)") + ylab("Speed (mm/sec)")
 }
