@@ -20,8 +20,7 @@
   library(multcomp)
   
   library(extrafont)
-  font_import(pattern="PT")
-  y
+  #font_import(pattern="PT")
   loadfonts()
 }
 

@@ -23,13 +23,19 @@
 # Plot --------------------------------------------------------------------
 {
   d <- data.frame(fread(f.name, header=T))
-  matplot(seq(0.2,60,0.2), t(d[,3:dim(d)[2]]), type="l")
-  
   df <- data.frame(
-    Treat = paste(d$Leader, d$Follower),
+    Treat = c("FF-real", "FF-simulate", "FM-real", "MM-real", "MM-simulate"),
     prop60 = d$X300/100000
   )
+  df$Treat <- factor(df$Treat, level = rev(df$Treat[c(3,1,2,4,5)]))
   
-  ggplot(df, aes(x=Treat, y=prop60)) +
-    geom_bar(stat="identity")
+  ggplot(df, aes(y=Treat, x=prop60)) +
+    geom_bar(stat="identity") +
+    theme_bw() +
+    theme(legend.position = "none", aspect.ratio = 1)+ 
+    xlim(c(0,0.5))+
+    xlab("Reencounter rate after 60 seconds")
+  ggsave(filename = file.path(PROJHOME, "/plot/", paste0(today, "-SimulationRes.pdf")),
+         width=4, height = 4, family="PT Sans")
+  
 }

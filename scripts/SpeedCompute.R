@@ -104,9 +104,10 @@
 }
 
 
-{
+# plot trajectories for figure
+if(F){
   ind.names <- unique(df$name) 
-  v=68
+  v=68 #95
   df.temp <- df[df$name == ind.names[v],]
   ggplot(data=df.temp, aes(x=x, y=y, col=as.factor(scheme), group=as.factor(scheme))) +
     geom_path() + 

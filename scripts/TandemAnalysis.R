@@ -208,8 +208,6 @@
   m <- coxme(Surv(Sep.time, Cens) ~ Treat + (1|Colony/Video), data = res.sep.time)
   summary(m)
   Anova(m)
-  multicomparison<-glht(m,linfct=mcp(Treat="Tukey"))
-  summary(multicomparison)
   
   ## ggplots
   ggsurvplot(
@@ -219,7 +217,7 @@
     conf.int = T,
     xlab = "Duration (sec)", 
     ylab = "Tandem Prob",
-    xlim = c(0,150),
+    xlim = c(0,60),
     palette = viridis(3)[c(1:3)],
     legend = c(0.8,0.8)
     
