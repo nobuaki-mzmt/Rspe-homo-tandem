@@ -13,12 +13,7 @@
 # Setup -------------------------------------------------------------------
 {
   rm(list = ls())
-  
-  today <- Sys.Date()
-  
-  ## Packages
-  {
-  }
+  source(file.path(PROJHOME, "/scripts/Functions.R"))
   
   ## Data
   rda.place <- file.path(PROJHOME, "/data/", "rda")
@@ -28,16 +23,6 @@
 
 # Computation --------------------------------------------------------------
 {
-  angle_cal <- function(X, Y, Length){
-    Ax <- (X[3:Length-1] - X[3:Length-2])
-    Bx <- (X[3:Length] - X[3:Length-1])
-    Ay <- (Y[3:Length-1] - Y[3:Length-2])
-    By <- (Y[3:Length] - Y[3:Length-1])
-    hugo <- (Ax * By - Ay * Bx + 0.000001)/abs(Ax * By - Ay * Bx + 0.000001)
-    cos <- round((Ax * Bx + Ay * By) / ((Ax^2 + Ay^2)*(Bx^2 + By^2))^0.5,14)
-    return(acos(cos)*hugo)
-  }
-  
   ## calcurate step length
   df <- na.omit(df)
   df$sl <- c(NA, sqrt( diff(df$x)^2 + diff(df$y)^2))
@@ -54,8 +39,8 @@
   
   tapply(df.param$speed, df.param[,c("treat", "role")], mean)
   tapply(df.param$speed, df.param[,c("treat", "role")], se)
+  as.vector(tapply(df.param$speed, df.param[,c("treat", "role")], mean))
   
-  library(exactRankTests)
   wilcox.exact(speed ~ role, data=df.param[df.param$treat == "FF",], paired=F)
   wilcox.exact(speed ~ role, data=df.param[df.param$treat == "FM",], paired=F)
   wilcox.exact(speed ~ role, data=df.param[df.param$treat == "MM",], paired=F)
@@ -64,7 +49,6 @@
   
   
   ind.names <- unique(df$name) 
-  library(CircStats)
   mu = rho = c()
   for(i in 1:length(ind.names)){
     df.temp <- df.sep.focus[df.sep.focus$name == ind.names[i],]
@@ -88,14 +72,15 @@
   
   tapply(df.param$mu, df.param[,c("treat", "role")], mean)
   tapply(df.param$rho, df.param[,c("treat", "role")], mean)
+  as.vector(tapply(df.param$rho, df.param[,c("treat", "role")], mean))
   
   df.temp <- data.frame(
     treat = rep(c("FF", "FM", "MM"), 2),
-    role = rep( c("Follower", "Leader"), each=3),
-    speed = as.vector(tapply(df.param$speed, df.param[,c("treat", "role")], mean)) * 5,
-    sinuosity =as.vector(tapply(df.param$rho, df.param[,c("treat", "role")], mean))
+    role = rep( c("F", "L"), each=3),
+    speed = round(as.vector(tapply(df.param$speed, df.param[,c("treat", "role")], mean))*5, 3),
+    sinuosity =round( as.vector(tapply(df.param$rho, df.param[,c("treat", "role")], mean)), 3)
   )
   
-  write.csv(df.temp, file= file.path(PROJHOME, "/data/", "Parameters.csv"), row.names = F)
+  write.csv((df.temp), file= file.path(PROJHOME, "/data/", "Parameters.csv"), row.names = F, col.names = F)
   
 }

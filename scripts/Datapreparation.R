@@ -15,21 +15,11 @@
 # Setup -------------------------------------------------------------------
 {
   rm(list = ls())
-  
-  today <- Sys.Date()
-  
-  ## Packages
-  {
-    library(ggplot2)
-    library(data.table)
-    library(stringr)
-    require(grid)
-    require(gridExtra)
-  }
+  source(file.path(PROJHOME, "/scripts/Functions.R"))
   
   ## parameters
   fps <- 5
-  arena.size <- 140 # mm
+  arena.size <- 85 # mm
   
   ## file location
   dir.create(file.path(PROJHOME, "/data/", "rda"), showWarnings = FALSE)
@@ -63,6 +53,7 @@
     treat = substr(dataname[v], 4, 5)
     role = substr(dataname[v], 7, 7)
     if(role=="F"){role ="Follower"} else {role="Leader"}
+    colony = substr(dataname[v], 9, 9)
     id = substr(dataname[v], 9, 10)
     scheme = substr(dataname[v], 12, 14) 
     name <- paste(species, treat, id, role, sep="-")
@@ -83,12 +74,15 @@
     d <- d[seq(1,9001,6),]
     if(Dataframe){
       if(scheme == "tan"){
-        dftemp1 <- data.frame(species, treat, role, id, scheme = paste0(scheme, "-L"), name, time = d[,1], x=d[,2], y=d[,3])
+        dftemp1 <- data.frame(species, treat, role="Leader", colony, id,
+                              scheme = paste0(scheme, "-L"), name, time = d[,1], x=d[,2], y=d[,3])
         df <- rbind(df,dftemp1)
-        dftemp2 <- data.frame(species, treat, role, id, scheme = paste0(scheme, "-F"), name, time = d[,1], x=d[,4], y=d[,5])
+        dftemp2 <- data.frame(species, treat, role="Follower", colony, id,
+                              scheme = paste0(scheme, "-F"), name, time = d[,1], x=d[,4], y=d[,5])
         df <- rbind(df,dftemp2)
       } else {
-        dftemp1 <- data.frame(species, treat, role, id, scheme = scheme, name, time = d[,1], x=d[,2], y=d[,3])
+        dftemp1 <- data.frame(species, treat, role, colony, id,
+                              scheme = scheme, name, time = d[,1], x=d[,2], y=d[,3])
         df <- rbind(df,dftemp1)
       }
     }

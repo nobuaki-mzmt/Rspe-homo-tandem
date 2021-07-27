@@ -13,12 +13,7 @@
 # Setup -------------------------------------------------------------------
 {
   rm(list = ls())
-  
-  today <- Sys.Date()
-  
-  ## Packages
-  {
-  }
+  source(file.path(PROJHOME, "/scripts/Functions.R"))
   
   ## Data
   rda.place <- file.path(PROJHOME, "/data/", "rda")
@@ -97,6 +92,6 @@
     scale_color_viridis(discrete = T, end=0.5) +
     scale_fill_viridis(discrete = T, end=0.5) +
     theme_bw() + theme(aspect.ratio = 0.75) +
-    scale_y_continuous(limits = c(0,30)) +
+    scale_y_continuous(limits = c(0,20)) +
     xlab("Time (sec)") + ylab("Speed (mm/sec)")
 }
