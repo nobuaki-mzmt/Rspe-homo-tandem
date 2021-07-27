@@ -18,6 +18,11 @@
   library(lme4)
   library(car)
   library(multcomp)
+  
+  library(extrafont)
+  font_import(pattern="PT")
+  y
+  loadfonts()
 }
 
 today <- Sys.Date()

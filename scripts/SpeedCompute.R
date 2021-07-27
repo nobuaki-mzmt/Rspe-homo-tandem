@@ -44,7 +44,7 @@
       }
       
       df.temp <- df.temp[2:dim(df.temp)[1],]
-      df.temp.out <- df.temp[df.temp$time %% 1==0,1:7]
+      df.temp.out <- df.temp[df.temp$time %% 1==0,1:8]
       df.temp.out$speed <- df.temp$sl[(df.temp$time*10) %% 10 == 2] + 
                             df.temp$sl[(df.temp$time*10) %% 10 == 4] +
                             df.temp$sl[(df.temp$time*10) %% 10 == 4] +
@@ -86,12 +86,33 @@
   df.sec.sum[df.sec.sum$treat=="MM",]$role <- paste0("M-", df.sec.sum[df.sec.sum$treat=="MM",]$role)
   df.sec.sum$role <- factor(df.sec.sum$role, levels=c("F-Leader", "F-Follower",
                                                        "M-Leader", "M-Follower"))
+  
+  col1 <- c(viridis(2, end = 0.5), viridis(2, begin=0.2, end = 0.6))
+  col1 <- col1[c(2,4,3,1)]
   ggplot(df.sec.sum, aes(x=time, y=speed.mean, color=role, fill=role)) +
-    geom_ribbon(aes(ymin=speed.mean.m.se, ymax=speed.mean.p.se),alpha=0.5) +
+    geom_ribbon(aes(ymin=speed.mean.m.se, ymax=speed.mean.p.se), alpha=0.6) +
     facet_grid(treat~scheme) +
-    scale_color_viridis(discrete = T, end=0.5) +
-    scale_fill_viridis(discrete = T, end=0.5) +
+    scale_color_manual(values=col1) +
+    scale_fill_manual(values=col1) +
+    #scale_color_viridis(discrete = T, end=0.5) +
+    #scale_fill_viridis(discrete = T, end=0.5) +
     theme_bw() + theme(aspect.ratio = 0.75) +
-    scale_y_continuous(limits = c(0,20)) +
+    scale_y_continuous(limits = c(0,17.5)) +
     xlab("Time (sec)") + ylab("Speed (mm/sec)")
+  ggsave(filename = file.path(PROJHOME, "/plot/", paste0(today, "-SpeedTimeDevelopment.pdf")),
+         width=6, height = 8, family="PT Sans")
+}
+
+
+{
+  ind.names <- unique(df$name) 
+  v=68
+  df.temp <- df[df$name == ind.names[v],]
+  ggplot(data=df.temp, aes(x=x, y=y, col=as.factor(scheme), group=as.factor(scheme))) +
+    geom_path() + 
+    theme_bw() +
+    theme(legend.position = "none", aspect.ratio = 1)+ 
+    xlim(c(0,85)) + ylim(c(0,85))
+  ggsave(filename = file.path(PROJHOME, "/plot/", paste0(today, "-trajectory-", v, ".pdf")),
+         width=3, height = 3, family="PT Sans")
 }
