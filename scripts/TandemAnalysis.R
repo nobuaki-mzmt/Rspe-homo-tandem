@@ -3,6 +3,10 @@
 ## 7/12/2021 ~
 ## script with R projects
 
+## This file is for analyzing datasets during tandems
+## 1. compare duration of tandems (or sep search) across pair combinations
+## 2. examine leader-follower interactions: interactions are estimated using the correlation between acceleration and inter-individual distance. (Franks and Richardson 2006; Mizumoto and Bourguignon in prep).
+
 # Environment -------------------------------------------------------------
 {
   RPROJ <- list(PROJHOME = normalizePath(getwd()))
@@ -30,23 +34,27 @@
 {
   Plot = F
   
-  ## calcurate step length
-  df <- na.omit(df)
-  df$sl <- c(NA, sqrt( diff(df$x)^2 + diff(df$y)^2))
-  df$sl[df$time == 0] <- NA
-  
   ## get only during tandem
   df.tan <- df[df$scheme != "sep",]
   
+  ## calcurate step length
+  df.tan$sl <- c(NA, sqrt( diff(df.tan$x)^2 + diff(df.tan$y)^2))
+  df.tan$sl[df.tan$time == 0] <- NA
+  
+  ## calculate accerelation
+  df.tan$acc <- c(diff(df.tan$sl*5), NA)
+  df.tan$acc[df.tan$time == 0 | df.tan$time == 300] <- NA
+  
   ind.names <- unique(df.tan$name) 
-  res.tan.time = res.sep.time = res.tandem <- NULL
+  res.tan.time = res.sep.time = res.tandem = res.all <- NULL
   for(i in 1:length(ind.names)){
     print(paste(i, "/", length(ind.names), "->", ind.names[i]))
     
     df.temp <- df.tan[df.tan$name == ind.names[i],]
+    df.temp <- na.omit(df.temp)
     df.follower <- df.temp[df.temp$role == "Follower",]
     df.leader <- df.temp[df.temp$role == "Leader",]
-    if(dim(df.temp)[1] < 3000){print(paste("not enough data", dim(df.temp)[1], "next"));next;}
+    if(dim(df.temp)[1] < 2998){print(paste("not enough data", dim(df.temp)[1], "next"));next;}
     x.follower = df.follower$x
     y.follower = df.follower$y
     x.leader = df.leader$x
@@ -171,7 +179,7 @@
       }
     }
     
-    ## indidivuald tandem data
+    ## summarized individual tandem data
     res.tandem = rbind( res.tandem, data.frame(
       Video = df.temp$name[1],
       Treat = df.temp$treat[1],
@@ -180,11 +188,28 @@
       Tandem.Proportion = sum(tandem)/length(tandem)
     ))
     
+    ## all data
+    res.all = rbind(res.all,
+                    data.frame(
+                      df.follower[, c(1:2, 4:5, 7:8)],
+                      x.follower = df.follower$x,
+                      y.follower = df.follower$y,
+                      x.leader = df.leader$x,
+                      y.leader = df.leader$y,
+                      sl.follower = df.follower$sl,
+                      sl.leader = df.leader$sl,
+                      acc.follower = df.follower$acc,
+                      acc.leader = df.leader$acc,
+                      ind.dis = sqrt( (x.follower - x.leader)^2 + (y.follower - y.leader)^2 ),
+                      scheme
+                    )
+                    )
+    
   }
 }
 
 
-
+## 1. Survival analysis for tandem duration and sep duration
 {
   m <- coxme(Surv(Tan.time, Cens) ~ Treat + (1|Colony/Video), data = res.tan.time)
   summary(m)
@@ -265,3 +290,24 @@
     
   )
 }
+
+## 2. Correalation between acceleration and inter-individual distance
+df.temp <- data.frame(
+  res.all[, c(2,3,4,6)],
+  role = rep(c("leader", 'follower'), each=dim(res.all)[1]),
+  scheme = res.all$scheme,
+  acc = c(res.all$acc.leader, res.all$acc.follower),
+  ind.dis = res.all$ind.dis)
+
+df.temp <- df.temp[sample(1:dim(df.temp)[1], 60000, replace = F),]
+ggplot(df.temp[df.temp$scheme == 't',], aes(x = ind.dis, y=acc, col=role))+
+  geom_point(alpha=0.1)+
+  facet_wrap(vars(treat)) + 
+  ylim(c(-20,20)) +
+  stat_smooth(se =T, method = "lm")
+
+dim(df.temp)
+
+  
+  
+  

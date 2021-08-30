@@ -1,3 +1,10 @@
+## R. speratus homosexual tandem analysis
+## N. Mizumoto
+## 7/12/2021 ~
+## script with R projects
+
+## This file is for loading packages and Functions for other scripts.
+
 ## Packages
 {
   library(data.table)
