@@ -45,6 +45,7 @@
   df.tan$acc <- c(diff(df.tan$sl*5), NA)
   df.tan$acc[df.tan$time == 0 | df.tan$time == 300] <- NA
   
+  ## main calculation
   ind.names <- unique(df.tan$name) 
   res.tan.time = res.sep.time = res.tandem = res.all <- NULL
   for(i in 1:length(ind.names)){
@@ -90,6 +91,88 @@
       }
     }
     
+    ## Predict role change
+    {
+      lv <- length(x.leader)
+      angle.leader = atan2(y.leader[2:lv] - y.leader[2:lv-1] , x.leader[2:lv] - x.leader[2:lv-1])
+      angle.follower = atan2(y.follower[2:lv] - y.follower[2:lv-1] , x.follower[2:lv] - x.follower[2:lv-1])
+      angle.l.to.f = atan2(y.follower - y.leader , x.follower - x.leader)[2:lv-1]
+      angle.f.to.l = atan2(y.leader - y.follower , x.leader - x.follower)[2:lv-1]
+      r.dir.l.to.f <- apply(cbind(abs(angle.leader - angle.l.to.f), pi*2-abs(angle.leader - angle.l.to.f)), 1, min)
+      r.dir.f.to.l <- apply(cbind(abs(angle.follower - angle.f.to.l), pi*2-abs(angle.follower - angle.f.to.l)), 1, min)
+      
+      correct.role <- r.dir.f.to.l < pi/2 & abs(pi-r.dir.l.to.f) < pi/2
+      reverse.role <- r.dir.l.to.f < pi/2 & abs(pi-r.dir.f.to.l) < pi/2
+      correct.role <- (c(correct.role,F) & tandem)
+      reverse.role <- (c(reverse.role,F) & tandem)
+      
+      x.leader.vec <- x.leader[2:lv] - x.leader[2:lv-1]
+      y.leader.vec <- y.leader[2:lv] - y.leader[2:lv-1]
+      leader.vec.length <- sqrt(x.leader.vec^2+y.leader.vec^2)
+      x.leader.vec <- x.leader.vec/leader.vec.length
+      y.leader.vec <- y.leader.vec/leader.vec.length
+      
+      x.follower.vec <- x.follower[2:lv] - x.follower[2:lv-1]
+      y.follower.vec <- y.follower[2:lv] - y.follower[2:lv-1]
+      follower.vec.length <- sqrt(x.follower.vec^2+y.follower.vec^2)
+      x.follower.vec <- x.follower.vec/follower.vec.length
+      y.follower.vec <- y.follower.vec/follower.vec.length
+      
+      x.center <- (x.follower + x.leader)/2
+      y.center <- (y.follower + y.leader)/2
+      x.leader.rotation.vec <- x.leader[2:lv-1] - x.center[2:lv-1]
+      y.leader.rotation.vec <- y.leader[2:lv-1] - y.center[2:lv-1]
+      leader.rotation.vec.length <- sqrt(x.leader.rotation.vec^2+y.leader.rotation.vec^2)
+      x.leader.rotation.vec <- x.leader.rotation.vec/leader.rotation.vec.length
+      y.leader.rotation.vec <- y.leader.rotation.vec/leader.rotation.vec.length
+      
+      x.follower.rotation.vec <- x.follower[2:lv-1] - x.center[2:lv-1]
+      y.follower.rotation.vec <- y.follower[2:lv-1] - y.center[2:lv-1]
+      follower.rotation.vec.length <- sqrt(x.follower.rotation.vec^2+y.follower.rotation.vec^2)
+      x.follower.rotation.vec <- x.follower.rotation.vec/follower.rotation.vec.length
+      y.follower.rotation.vec <- y.follower.rotation.vec/follower.rotation.vec.length
+      
+      x.leader.ang.moment <- x.leader.vec*x.leader.rotation.vec - y.leader.vec*y.leader.rotation.vec
+      y.leader.ang.moment <- x.leader.vec*y.leader.rotation.vec + y.leader.vec*x.leader.rotation.vec
+      x.follower.ang.moment <- x.follower.vec*x.follower.rotation.vec - y.follower.vec*y.follower.rotation.vec
+      y.follower.ang.moment <- x.follower.vec*y.follower.rotation.vec + y.follower.vec*x.follower.rotation.vec
+      leader.ang.moment.length <- sqrt(x.leader.ang.moment^2+y.leader.ang.moment^2)
+      follower.ang.moment.length <- sqrt(x.follower.ang.moment^2+y.follower.ang.moment^2)
+      
+      polarization <- sqrt(
+        (x.leader.vec + x.follower.vec)^2+
+          (y.leader.vec + y.follower.vec)^2
+      )/2
+      
+      rotation <- sqrt(
+        (x.leader.ang.moment + x.follower.ang.moment)^2+
+          (y.leader.ang.moment + y.follower.ang.moment)^2
+      )/2
+      if(Plot){
+        png(file.path(PROJHOME, "plot/tandem-reverse/", paste0(df.temp$name[1], ".png")))
+        par(mfrow=c(2,1), pin=c(6,2))
+        plot((tandem)*0, col=(tandem)*2, type="p", ylim=c(-1,1), main=ind.names[i])
+        points((correct.role - reverse.role), type="l")
+        
+        plot(polarization, col=2, type="l", ylim=c(0,1))
+        points(rotation, col=4, type="l")
+        
+        dev.off()
+      }
+    }
+    
+    rotation[is.na(rotation)] <- 0
+    competition <- tandem & ind.dis < 4 & c(rotation, F) > 0.5
+    competition <- tandem.smoothing(competition, !competition, 5)
+    par(mfrow=c(2,1), pin=c(6,2))
+    plot((tandem)*0, col=(tandem)*2, type="p", ylim=c(-1,1), main=ind.names[i])
+    points((correct.role - reverse.role), type="l")
+    points(competition*0-0.2, col=competition*4)
+    
+    plot(polarization, col=2, type="l", ylim=c(0,1))
+    points(rotation, col=4, type="l")
+    
+    
     ## get scheme
     {
       scheme <- tandem
@@ -118,6 +201,7 @@
         }
       }
     }
+    
     
     ## Plots
     if(Plot){
@@ -201,7 +285,9 @@
                       acc.follower = df.follower$acc,
                       acc.leader = df.leader$acc,
                       ind.dis = sqrt( (x.follower - x.leader)^2 + (y.follower - y.leader)^2 ),
-                      scheme
+                      scheme,
+                      polarization= c(polarization,NA),
+                      rotation = c(rotation,NA)
                     )
                     )
     
@@ -309,5 +395,16 @@ ggplot(df.temp[df.temp$scheme == 't',], aes(x = ind.dis, y=acc, col=role))+
 dim(df.temp)
 
   
-  
+
+##
+
+library(ggridges)
+ggplot(res.all[res.all$scheme=="t",], aes(x=polarization, y=treat)) +
+  geom_density_ridges(fill=2, alpha=0.2, draw_baseline = T)
+ggplot(res.all[res.all$scheme=="t",], aes(x=rotation, y=treat)) +
+  geom_density_ridges(fill=2, alpha=0.2, draw_baseline = T)
+ggplot(res.all[res.all$scheme=="t",], aes(x=ind.dis, y=treat)) +
+  geom_density_ridges(fill=2, alpha=0.2, draw_baseline = T) +
+  geom_vline(xintercept  = 4)
+
   
